@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOMIDOSIS - Registro Clínico y Asistente IA de Enfermería</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background-color: white !important;
+        color: black !important;
+        font-size: 8.5pt !important;
+      }
+      .print-container {
+        box-shadow: none !important;
+        border: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .page-break {
+        page-break-inside: avoid;
+      }
+    }
+    /* Custom pulse glow for AI buttons */
+    .ai-glow {
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.35);
+      transition: all 0.2s ease-in-out;
+    }
+    .ai-glow:hover {
+      box-shadow: 0 0 22px rgba(59, 130, 246, 0.6);
+    }
+    /* Canvas styling */
+    .signature-pad {
+      touch-action: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
+
+  <header class="no-print sticky top-0 z-40 bg-slate-900 text-white shadow-md border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="bg-gradient-to-tr from-cyan-500 to-blue-600 p-2 rounded-xl text-white font-bold text-lg shadow">
+          <svg class="w-6 h-6 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            DOMIDOSIS <span class="text-xs bg-blue-500/30 text-blue-300 font-semibold px-2 py-0.5 rounded-full border border-blue-400/40">IA Clínica v2.5</span>
+          </h1>
+          <p class="text-xs text-slate-400">Enfermería Domiciliaria | T.P. 00235-2008</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <button onclick="fillDemoData()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition flex items-center gap-1.5 border border-slate-700">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Cargar Demo
+        </button>
+        <button onclick="clearForm()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition border border-slate-700">
+          Limpiar
+        </button>
+        <button onclick="downloadWordDoc()" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white shadow transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Descargar Word (.doc)
+        </button>
+        <button onclick="window.print()" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          Imprimir Folio
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-6">
+    
+    <!-- Header Card -->
+    <div class="print-container bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6 transition-all">
+      
+      <!-- Top banner -->
+      <div class="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 p-6 text-white text-center border-b-2 border-blue-500">
+        <div class="inline-block px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-200 text-xs font-semibold uppercase tracking-wider mb-2">
+          Atención Domiciliaria Profesional
+        </div>
+        <h2 class="text-2xl font-black tracking-wide text-white">DOMIDOSIS</h2>
+        <h3 class="text-sm font-semibold text-slate-200 mt-1 uppercase tracking-wide">Registro de Atención y Consentimiento Informado</h3>
+        <p class="text-xs text-slate-300 mt-1">Técnico en Enfermería | Registro T.P. 00235-2008 &bull; C.C. 1.098.677.802</p>
+      </div>
+
+      <div class="p-6 space-y-6">
+
+        <!-- 1. DATOS DEL PACIENTE -->
+        <section class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+          <div class="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-blue-900 text-white flex items-center justify-center text-xs">1</span>
+              Datos del Paciente y Ubicación
+            </h4>
+            <span class="text-xs text-slate-400 no-print">Información obligatoria</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Fecha de Atención</label>
+              <input type="date" id="pacienteFecha" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Hora Inicio</label>
+              <input type="time" id="horaInicio" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Hora Fin</label>
+              <input type="time" id="horaFin" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Tipo de Paciente</label>
+              <select id="pacienteTipo" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="adulto">Adulto (&gt;18 años)</option>
+                <option value="adolescente">Adolescente (12-17 años)</option>
+                <option value="escolar">Escolar (6-11 años)</option>
+                <option value="preescolar">Preescolar (3-5 años)</option>
+                <option value="lactante">Lactante (1-24 meses)</option>
+                <option value="neonato">Recién Nacido (0-28 días)</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-slate-600 mb-1">Nombre Completo del Paciente</label>
+              <input type="text" id="pacienteNombre" placeholder="Ej. Carlos Alberto Mendoza" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Documento de Identidad</label>
+              <input type="text" id="pacienteDoc" placeholder="C.C. / T.I. / R.C." class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Edad y Teléfono</label>
+              <div class="flex gap-2">
+                <input type="number" id="pacienteEdad" placeholder="Años" class="w-20 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <input type="tel" id="pacienteTel" placeholder="Teléfono" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-slate-600 mb-1">Dirección Domiciliaria</label>
+              <input type="text" id="pacienteDireccion" placeholder="Ej. Calle 45 # 12-34 Apto 302" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Municipio / Ciudad</label>
+              <input type="text" id="pacienteMunicipio" placeholder="Ej. Bucaramanga / Floridablanca" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Acompañante / Parentesco</label>
+              <input type="text" id="pacienteAcomp" placeholder="Nombre y Parentesco" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. VALORACIÓN DE SIGNOS VITALES & ASISTENTE IA -->
+        <section class="border border-slate-200 rounded-xl p-4 bg-white">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-slate-200 pb-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-blue-900 text-white flex items-center justify-center text-xs">2</span>
+              Valoración Inicial de Signos Vitales
+            </h4>
+            
+            <!-- Gemini AI Vitals Button -->
+            <button type="button" onclick="analizarSignosVitalesIA()" class="no-print ai-glow bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow">
+              <svg class="w-3.5 h-3.5 text-yellow-300 animate-spin" id="vitalsSpinner" style="display:none;" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+              <svg class="w-3.5 h-3.5 text-yellow-300" id="vitalsSparkle" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              <span>Interpretar Signos con Gemini IA</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+              <span class="block text-[11px] font-bold text-slate-700">T.A. (mmHg)</span>
+              <div class="flex items-center justify-center gap-1 mt-1">
+                <input type="number" id="vitalTaSis" placeholder="120" class="w-12 text-center text-xs font-semibold bg-white border border-slate-300 rounded p-1">
+                <span class="text-slate-400">/</span>
+                <input type="number" id="vitalTaDia" placeholder="80" class="w-12 text-center text-xs font-semibold bg-white border border-slate-300 rounded p-1">
+              </div>
+              <span class="text-[10px] text-slate-400 mt-1 block">Tensión Arterial</span>
+            </div>
+
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+              <span class="block text-[11px] font-bold text-slate-700">F.C. (lpm)</span>
+              <input type="number" id="vitalFc" placeholder="75" class="w-full text-center text-xs font-semibold bg-white border border-slate-300 rounded p-1 mt-1">
+              <span class="text-[10px] text-slate-400 mt-1 block">Frecuencia Cardíaca</span>
+            </div>
+
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+              <span class="block text-[11px] font-bold text-slate-700">F.R. (rpm)</span>
+              <input type="number" id="vitalFr" placeholder="18" class="w-full text-center text-xs font-semibold bg-white border border-slate-300 rounded p-1 mt-1">
+              <span class="text-[10px] text-slate-400 mt-1 block">Frecuencia Resp.</span>
+            </div>
+
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+              <span class="block text-[11px] font-bold text-slate-700">SpO2 (%)</span>
+              <input type="number" id="vitalSpo2" placeholder="98" class="w-full text-center text-xs font-semibold bg-white border border-slate-300 rounded p-1 mt-1">
+              <span class="text-[10px] text-slate-400 mt-1 block">Sat. de Oxígeno</span>
+            </div>
+
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+              <span class="block text-[11px] font-bold text-slate-700">Temp (°C)</span>
+              <input type="number" step="0.1" id="vitalTemp" placeholder="36.5" class="w-full text-center text-xs font-semibold bg-white border border-slate-300 rounded p-1 mt-1">
+              <span class="text-[10px] text-slate-400 mt-1 block">Temperatura</span>
+            </div>
+
+            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+              <span class="block text-[11px] font-bold text-slate-700">Glucometría</span>
+              <input type="number" id="vitalGluco" placeholder="95" class="w-full text-center text-xs font-semibold bg-white border border-slate-300 rounded p-1 mt-1">
+              <span class="text-[10px] text-slate-400 mt-1 block">mg / dL</span>
+            </div>
+          </div>
+
+          <!-- AI Vitals Response Card -->
+          <div id="vitalsAiCard" class="hidden mt-3 p-3.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl text-xs space-y-1.5 transition-all">
+            <div class="flex items-center justify-between text-blue-900 font-bold">
+              <span class="flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                Evaluación Clínica de Signos Vitales (Gemini IA)
+              </span>
+              <button onclick="document.getElementById('vitalsAiCard').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">&times;</button>
+            </div>
+            <div id="vitalsAiOutput" class="text-slate-700 leading-relaxed"></div>
+          </div>
+        </section>
+
+        <!-- 3. REGISTRO DEL PROCEDIMIENTO -->
+        <section class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-slate-200 pb-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-blue-900 text-white flex items-center justify-center text-xs">3</span>
+              Registro del Procedimiento Realizado
+            </h4>
+
+            <div class="no-print flex items-center gap-2">
+              <button type="button" onclick="validarSeguridadFarmacoIA()" class="ai-glow bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>Filtro Farmacológico IA</span>
+              </button>
+              <button type="button" onclick="redactarNotaEvolucionIA()" class="ai-glow bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow">
+                <svg class="w-3.5 h-3.5 text-yellow-300" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+                <span>Redactar Nota Clínica IA</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Checkboxes Procedimientos -->
+          <div class="bg-white p-3 rounded-lg border border-slate-200 mb-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-xs">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="procIny" class="w-4 h-4 text-blue-600 rounded">
+              <span>Inyectología (IM/SC/EV)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="procSuero" class="w-4 h-4 text-blue-600 rounded">
+              <span>Sueroterapia / Hidratación</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="procSonda" class="w-4 h-4 text-blue-600 rounded">
+              <span>Paso / Cambio Sonda</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="procHerida" class="w-4 h-4 text-blue-600 rounded">
+              <span>Curación / Retiro Puntos</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="procMuestras" class="w-4 h-4 text-blue-600 rounded">
+              <span>Toma Muestras / Otros</span>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm mb-3">
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-slate-600 mb-1">Medicamento / Insumo Administrado</label>
+              <input type="text" id="procMedicamento" placeholder="Ej. Ceftriaxona 1g Frasco ampolla + Solvente" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Dosis y Vía de Administración</label>
+              <input type="text" id="procDosisVia" placeholder="Ej. 1 g I.M. Glúteo profundo" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm mb-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Lote del Producto</label>
+              <input type="text" id="procLote" placeholder="Ej. LOT-92819" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Fecha de Vencimiento</label>
+              <input type="date" id="procVencimiento" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Médico Prescriptor y Registro</label>
+              <input type="text" id="procMedico" placeholder="Ej. Dr. Mario Ruiz - R.M. 8492" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="block text-xs font-medium text-slate-600">Estado inicial de la zona / herida / paciente & Evolución clínica</label>
+              <span class="text-[11px] text-blue-600 font-medium cursor-pointer hover:underline no-print" onclick="redactarNotaEvolucionIA()">Redactar automáticamente con IA &rarr;</span>
+            </div>
+            <textarea id="procEvolucion" rows="3" placeholder="Describa la valoración inicial de la zona de aplicación o curación, asepsia y antisepsia, tolerancia del procedimiento y respuesta del paciente..." class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none leading-relaxed"></textarea>
+          </div>
+
+          <!-- AI Drug & Note Feedback Box -->
+          <div id="aiClinicalNoticeBox" class="hidden mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-1">
+            <div class="flex items-center justify-between text-amber-900 font-bold">
+              <span class="flex items-center gap-1.5" id="aiNoticeTitle">Revisión Clínica Asistida</span>
+              <button onclick="document.getElementById('aiClinicalNoticeBox').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">&times;</button>
+            </div>
+            <div id="aiNoticeBody" class="text-slate-700 leading-relaxed"></div>
+          </div>
+        </section>
+
+        <!-- 4. FILTRO DE SEGURIDAD Y RESIDUOS -->
+        <section class="border border-slate-200 rounded-xl p-4 bg-white">
+          <div class="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-blue-900 text-white flex items-center justify-center text-xs">4</span>
+              Filtro de Seguridad y Custodia de Residuos
+            </h4>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs mb-3">
+            <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex flex-col justify-between">
+              <span class="font-medium text-slate-700">¿Paciente refiere antecedentes alérgicos?</span>
+              <div class="mt-2 flex gap-4">
+                <label class="flex items-center gap-1.5"><input type="radio" name="alergias" value="NO" checked class="text-blue-600"> <span>NO</span></label>
+                <label class="flex items-center gap-1.5"><input type="radio" name="alergias" value="SI" class="text-blue-600"> <span>SÍ</span></label>
+              </div>
+            </div>
+
+            <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex flex-col justify-between">
+              <span class="font-medium text-slate-700">¿Presentó evento adverso / complicación?</span>
+              <div class="mt-2 flex gap-4">
+                <label class="flex items-center gap-1.5"><input type="radio" name="eventoAdverso" value="NO" checked class="text-blue-600"> <span>NO</span></label>
+                <label class="flex items-center gap-1.5"><input type="radio" name="eventoAdverso" value="SI" class="text-blue-600"> <span>SÍ</span></label>
+              </div>
+            </div>
+
+            <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex flex-col justify-between">
+              <span class="font-medium text-slate-700">Monitoreo post-procedimiento satisfactorio:</span>
+              <div class="mt-2 flex gap-4">
+                <label class="flex items-center gap-1.5"><input type="radio" name="monitoreoPost" value="SI" checked class="text-blue-600"> <span>SÍ</span></label>
+                <label class="flex items-center gap-1.5"><input type="radio" name="monitoreoPost" value="NO" class="text-blue-600"> <span>NO</span></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custodia de residuos -->
+          <div class="p-3 bg-blue-50/50 border border-blue-100 rounded-lg text-xs flex items-start gap-2 text-slate-700">
+            <input type="checkbox" id="custodiaResiduos" checked class="w-4 h-4 text-blue-600 mt-0.5 rounded">
+            <label for="custodiaResiduos" class="cursor-pointer">
+              <strong>Custodia y Disposición de Residuos Biológicos:</strong> Certifico que todo el material cortopunzante (agujas, hojas de bisturí) y residuos biosanitarios generados durante la atención fueron clasificados, segregados en contenedor rígido de seguridad y retirados por el profesional para su ruta ambientalmente segura.
+            </label>
+          </div>
+        </section>
+
+        <!-- 5. RECOMENDACIONES DOMICILIARIAS CON IA -->
+        <section class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2 border-b border-slate-200 pb-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-blue-900 text-white flex items-center justify-center text-xs">5</span>
+              Plan de Cuidados en Casa y Signos de Alarma
+            </h4>
+            
+            <button type="button" onclick="generarCuidadosCasaIA()" class="no-print ai-glow bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1 rounded-lg flex items-center gap-1.5 shadow">
+              <svg class="w-3.5 h-3.5 text-yellow-200" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/></svg>
+              <span>Generar Recomendaciones con Gemini IA</span>
+            </button>
+          </div>
+
+          <textarea id="cuidadosDomiciliarios" rows="3" placeholder="Instrucciones al paciente/familiar, signos de alarma para acudir a urgencias (fiebre &gt;38.5, sangrado, eritema), cuidados de la punción o herida..." class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none leading-relaxed"></textarea>
+        </section>
+
+        <!-- 6. CONSENTIMIENTO INFORMADO -->
+        <section class="border border-slate-200 rounded-xl p-4 bg-white">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-blue-900 mb-2 border-b border-slate-200 pb-1">
+            6. Consentimiento Informado y Declaración de Conformidad
+          </h4>
+          <p class="text-[11px] text-slate-600 text-justify leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-200">
+            Declaro que he sido informado(a) de manera clara, oportuna y comprensible sobre el procedimiento de enfermería a realizar, sus objetivos, beneficios esperados y posibles riesgos o molestias. En pleno uso de mis facultades, autorizo voluntariamente su ejecución y certifico que el servicio fue prestado a entera satisfacción, recibiendo la atención bajo estrictos estándares de bioseguridad, ética y profesionalismo.
+          </p>
+
+          <!-- FIRMAS DIGITALES -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-5 pt-3">
+            
+            <!-- Firma Paciente -->
+            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50 text-center flex flex-col justify-between">
+              <div class="text-xs font-bold text-slate-700 mb-1">FIRMA DEL PACIENTE O ACOMPAÑANTE</div>
+              
+              <div class="no-print my-2">
+                <canvas id="signaturePad" class="signature-pad w-full h-28 bg-white border border-slate-300 rounded-lg shadow-inner cursor-crosshair"></canvas>
+                <div class="flex justify-between items-center mt-1">
+                  <span class="text-[10px] text-slate-400">Firme sobre el recuadro con el dedo o mouse</span>
+                  <button type="button" onclick="clearSignature()" class="text-[10px] text-red-600 hover:underline">Limpiar Firma</button>
+                </div>
+              </div>
+
+              <!-- Vista previa para impresión -->
+              <div class="hidden print:block h-16 border-b border-black mb-2"></div>
+
+              <div class="text-xs text-slate-600 space-y-1">
+                <p id="firmanteLabelDoc">C.C. / T.I. N° __________________________</p>
+                <p>Parentesco / Calidad: ______________________</p>
+              </div>
+            </div>
+
+            <!-- Firma Profesional -->
+            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50 text-center flex flex-col justify-between">
+              <div class="text-xs font-bold text-slate-700 mb-1">FIRMA TÉCNICO EN ENFERMERÍA</div>
+              
+              <div class="my-3 py-4 flex flex-col items-center justify-center">
+                <div class="font-serif italic text-2xl text-blue-900 border-b-2 border-slate-700 pb-1 px-8">
+                  Gina M. Galvis C.
+                </div>
+                <span class="text-[10px] text-emerald-700 font-semibold mt-1 flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                  Identidad Verificada en ReTHUS
+                </span>
+              </div>
+
+              <div class="text-xs text-slate-700 leading-tight">
+                <p class="font-bold text-blue-950">Gina Marely Galvis Carvajal</p>
+                <p class="text-[11px] text-slate-500">T.P. 00235-2008 &bull; C.C. 1.098.677.802</p>
+                <p class="text-[10px] text-slate-400">Atención Domiciliaria DOMIDOSIS</p>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 text-xs">
+      <span id="toastIcon" class="text-emerald-400 text-base font-bold">&check;</span>
+      <span id="toastMessage">Operación realizada con éxito</span>
+    </div>
+  </div>
+
+  <script>
+    // Configuration for Gemini API
+    const apiKey = ""; // Canvas runtime environment provides the key automatically
+    const geminiModel = "gemini-3-flash-preview";
+
+    // Helper: Show custom toast without using alert()
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toastNotification');
+      const msg = document.getElementById('toastMessage');
+      const icon = document.getElementById('toastIcon');
+      
+      msg.textContent = message;
+      icon.innerHTML = isError ? '&#9888;' : '&#10003;';
+      icon.className = isError ? 'text-amber-400 text-base font-bold' : 'text-emerald-400 text-base font-bold';
+      
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 4000);
+    }
+
+    async function callGemini(systemPrompt, userQuery) {
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: userQuery }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] }
+      };
+
+      const maxRetries = 3;
+      let delay = 1000;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP Error ${response.status}`);
+          }
+
+          const result = await response.json();
+          const candidate = result.candidates?.[0];
+          const text = candidate?.content?.parts?.[0]?.text;
+
+          if (text) {
+            return text;
+          } else {
+            throw new Error("Respuesta vacía de la IA.");
+          }
+        } catch (err) {
+          if (attempt === maxRetries - 1) {
+            throw err;
+          }
+          await new Promise(r => setTimeout(r, delay));
+          delay *= 2;
+        }
+      }
+    }
+
+    async function analizarSignosVitalesIA() {
+      const tipo = document.getElementById('pacienteTipo').value;
+      const edad = document.getElementById('pacienteEdad').value || "No especificada";
+      const sis = document.getElementById('vitalTaSis').value;
+      const dia = document.getElementById('vitalTaDia').value;
+      const fc = document.getElementById('vitalFc').value;
+      const fr = document.getElementById('vitalFr').value;
+      const spo2 = document.getElementById('vitalSpo2').value;
+      const temp = document.getElementById('vitalTemp').value;
+      const gluco = document.getElementById('vitalGluco').value;
+
+      if (!sis && !fc && !fr && !spo2) {
+        showToast("Por favor ingresa al menos la T.A., Pulso o Saturación para evaluar.", true);
+        return;
+      }
+
+      const spinner = document.getElementById('vitalsSpinner');
+      const sparkle = document.getElementById('vitalsSparkle');
+      const card = document.getElementById('vitalsAiCard');
+      const output = document.getElementById('vitalsAiOutput');
+
+      spinner.style.display = 'inline-block';
+      sparkle.style.display = 'none';
+      showToast("Analizando signos vitales con Gemini IA...");
+
+      const systemPrompt = `Eres un médico especialista en medicina de urgencias y soporte de enfermería domiciliaria.
+Tu objetivo es analizar los signos vitales ingresados considerando la edad y etapa del paciente (Adulto, Pediátrico, Neonato, etc.).
+Genera una evaluación concisa, estructurada en viñetas:
+1) Estado hemodinámico general (Estable, Alerta o Crítico).
+2) Análisis de cada parámetro indicando si está normal, taquicardia/bradicardia, hipotensión/hipertensión, hipoxemia, fiebre o normoglucemia según rangos de referencia para su grupo etario.
+3) Acción de enfermería inmediata sugerida.
+Usa lenguaje clínico claro y conciso sin rodeos.`;
+
+      const userQuery = `Evalúa los signos vitales de este paciente:
+- Grupo etario: ${tipo} (Edad informada: ${edad})
+- Tensión Arterial (TA): ${sis ? sis + '/' + dia + ' mmHg' : 'No tomada'}
+- Frecuencia Cardíaca (FC): ${fc ? fc + ' lpm' : 'No tomada'}
+- Frecuencia Respiratoria (FR): ${fr ? fr + ' rpm' : 'No tomada'}
+- Saturación de Oxígeno (SpO2): ${spo2 ? spo2 + '%' : 'No tomada'}
+- Temperatura: ${temp ? temp + ' °C' : 'No tomada'}
+- Glucometría: ${gluco ? gluco + ' mg/dL' : 'No tomada'}`;
+
+      try {
+        const text = await callGemini(systemPrompt, userQuery);
+        output.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        card.classList.remove('hidden');
+        showToast("Evaluación de signos vitales completada.");
+      } catch (err) {
+        showToast("Error al conectar con la IA de signos vitales.", true);
+        console.error(err);
+      } finally {
+        spinner.style.display = 'none';
+        sparkle.style.display = 'inline-block';
+      }
+    }
+
+    async function redactarNotaEvolucionIA() {
+      const paciente = document.getElementById('pacienteNombre').value || "Paciente";
+      const edad = document.getElementById('pacienteEdad').value || "adulto";
+      const medicamento = document.getElementById('procMedicamento').value;
+      const dosisVia = document.getElementById('procDosisVia').value;
+      const lote = document.getElementById('procLote').value;
+      const sis = document.getElementById('vitalTaSis').value;
+      const dia = document.getElementById('vitalTaDia').value;
+      const fc = document.getElementById('vitalFc').value;
+      const spo2 = document.getElementById('vitalSpo2').value;
+
+      let procedimientos = [];
+      if (document.getElementById('procIny').checked) procedimientos.push("Inyectología");
+      if (document.getElementById('procSuero').checked) procedimientos.push("Sueroterapia");
+      if (document.getElementById('procSonda').checked) procedimientos.push("Cateterismo/Sonda");
+      if (document.getElementById('procHerida').checked) procedimientos.push("Curación de herida");
+      if (document.getElementById('procMuestras').checked) procedimientos.push("Toma de muestras");
+
+      showToast("Redactando nota de enfermería con IA...");
+
+      const systemPrompt = `Eres una enfermera jefa experta en auditoría de historias clínicas y registro domiciliario en Colombia.
+Redacta una Nota de Enfermería profesional, técnica y rigurosa en formato continuo o SOAP/DAR.
+Incluye:
+- Recepción del paciente y valoración cefalocaudal breve.
+- Verificación de los 10 correctos en la administración de medicamentos.
+- Técnica aséptica, preparación del insumo, sitio anatómico y tolerancia del paciente.
+- Cero complicaciones inmediatas y recomendaciones de bioseguridad dadas.
+Mantén una redacción fluida, técnica y en tercera persona. Solo devuelve el texto de la nota.`;
+
+      const userQuery = `Genera la nota de evolución de enfermería domiciliaria para:
+- Paciente: ${paciente}, ${edad} años.
+- Procedimientos marcados: ${procedimientos.join(', ') || 'Atención general'}.
+- Medicamento/Insumo: ${medicamento || 'Sin medicamento específico'}.
+- Dosis y vía: ${dosisVia || 'Vía no especificada'}.
+- Lote: ${lote || 'N/A'}.
+- Signos vitales: TA: ${sis}/${dia} mmHg, FC: ${fc} lpm, SpO2: ${spo2}%.`;
+
+      try {
+        const text = await callGemini(systemPrompt, userQuery);
+        document.getElementById('procEvolucion').value = text.trim();
+        showToast("Nota de enfermería generada con éxito.");
+      } catch (err) {
+        showToast("No se pudo generar la nota automática.", true);
+        console.error(err);
+      }
+    }
+
+    async function validarSeguridadFarmacoIA() {
+      const med = document.getElementById('procMedicamento').value;
+      const dosisVia = document.getElementById('procDosisVia').value;
+      const edad = document.getElementById('pacienteEdad').value || "Adulto";
+
+      if (!med) {
+        showToast("Ingresa el nombre del medicamento para validar.", true);
+        return;
+      }
+
+      showToast("Consultando directrices farmacológicas con IA...");
+
+      const noticeBox = document.getElementById('aiClinicalNoticeBox');
+      const noticeBody = document.getElementById('aiNoticeBody');
+      const noticeTitle = document.getElementById('aiNoticeTitle');
+
+      const systemPrompt = `Eres un farmacólogo clínico y asesor de enfermería.
+Proporciona en 3 viñetas concisas:
+1. Precauciones críticas de administración (velocidad de infusión, dilución recomendada o técnica de aplicación para la vía).
+2. Efectos adversos frecuentes inmediatos a monitorizar en domicilio.
+3. Contraindicaciones principales o signos de hipersensibilidad.
+Sé muy directo y pedagógico.`;
+
+      const userQuery = `Fármaco: ${med}. Dosis y vía: ${dosisVia}. Grupo de edad: ${edad} años.`;
+
+      try {
+        const text = await callGemini(systemPrompt, userQuery);
+        noticeTitle.textContent = `Filtro Farmacológico: ${med}`;
+        noticeBody.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        noticeBox.classList.remove('hidden');
+        showToast("Revisión farmacológica lista.");
+      } catch (err) {
+        showToast("Error en la validación farmacológica.", true);
+      }
+    }
+
+    async function generarCuidadosCasaIA() {
+      const med = document.getElementById('procMedicamento').value || "Procedimiento de enfermería";
+      const procEvol = document.getElementById('procEvolucion').value;
+      const textarea = document.getElementById('cuidadosDomiciliarios');
+
+      showToast("Generando plan de cuidados y signos de alarma con IA...");
+
+      const systemPrompt = `Eres una enfermera domiciliaria que brinda educación al paciente y a su familia.
+Redacta recomendaciones domiciliarias claras, empáticas y prácticas para después del procedimiento.
+Estructura la respuesta en:
+1. Cuidados generales en casa (hidratación, reposo de la zona, higiene).
+2. Signos de Alarma inmediatos para acudir por urgencias (fiebre >38.5, dificultad respiratoria, enrojecimiento/calor excesivo, hematoma, etc.).
+Redacta en un lenguaje comprensible para la familia pero formal.`;
+
+      const userQuery = `Procedimiento/Medicamento: ${med}. Contexto de la evolución: ${procEvol}`;
+
+      try {
+        const text = await callGemini(systemPrompt, userQuery);
+        textarea.value = text.trim();
+        showToast("Recomendaciones domiciliarias generadas.");
+      } catch (err) {
+        showToast("Error al generar las recomendaciones.", true);
+      }
+    }
+
+    const canvas = document.getElementById('signaturePad');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#1e3a8a';
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('load', resizeCanvas);
+
+    function getCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      const pos = getCoords(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+      const pos = getCoords(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    });
+
+    window.addEventListener('mouseup', () => { isDrawing = false; });
+
+    // Touch events for mobile/tablet devices
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isDrawing = true;
+      const pos = getCoords(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+      if (!isDrawing) return;
+      e.preventDefault();
+      const pos = getCoords(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', () => { isDrawing = false; });
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function fillDemoData() {
+      document.getElementById('pacienteFecha').value = new Date().toISOString().split('T')[0];
+      document.getElementById('horaInicio').value = "09:30";
+      document.getElementById('horaFin').value = "10:15";
+      document.getElementById('pacienteTipo').value = "adulto";
+      document.getElementById('pacienteNombre').value = "Elena Patricia Morales Ruiz";
+      document.getElementById('pacienteDoc').value = "C.C. 63.489.120";
+      document.getElementById('pacienteEdad').value = "58";
+      document.getElementById('pacienteTel').value = "315-7894321";
+      document.getElementById('pacienteDireccion').value = "Carrera 33 # 48-15 Apto 501";
+      document.getElementById('pacienteMunicipio').value = "Bucaramanga";
+      document.getElementById('pacienteAcomp').value = "Andrés Felipe Mendoza (Hijo)";
+      
+      document.getElementById('vitalTaSis').value = "125";
+      document.getElementById('vitalTaDia').value = "82";
+      document.getElementById('vitalFc').value = "72";
+      document.getElementById('vitalFr').value = "16";
+      document.getElementById('vitalSpo2').value = "97";
+      document.getElementById('vitalTemp').value = "36.6";
+      document.getElementById('vitalGluco').value = "104";
+
+      document.getElementById('procIny').checked = true;
+      document.getElementById('procMedicamento').value = "Diclofenaco Sódico 75mg / 3mL Ampolla";
+      document.getElementById('procDosisVia').value = "75 mg Intramuscular Glútea profunda (Cuadrante Superoexterno)";
+      document.getElementById('procLote').value = "L-8823A";
+      document.getElementById('procVencimiento').value = "2027-11-30";
+      document.getElementById('procMedico').value = "Dr. Javier Sarmiento - RM 11209";
+
+      document.getElementById('procEvolucion').value = "Se realiza visita domiciliaria. Paciente consciente, alerta y orientada. Se verifican los 10 correctos de enfermería. Se realiza asepsia y antisepsia de la región glútea derecha con alcohol al 70%. Se administra Diclofenaco 75mg IM con técnica en Z sin extravasación ni resistencia. Procedimiento bien tolerado, sin dolor irradiado ni signos de sangrado. Monitoreo posterior durante 15 minutos satisfactorio.";
+      document.getElementById('cuidadosDomiciliarios').value = "1. Evitar masajes vigorosos en la zona de punción durante las próximas 4 horas.\n2. Mantener buena hidratación oral.\n3. Signos de alarma: Consultar a urgencias ante la presencia de rash cutáneo, hinchazón facial, disnea, fiebre superior a 38.3°C o dolor desproporcionado.";
+
+      document.getElementById('firmanteLabelDoc').textContent = "C.C. 63.489.120 - Elena P. Morales";
+
+      showToast("Datos de demostración cargados.");
+    }
+
+    function clearForm() {
+      document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="time"], input[type="tel"], textarea').forEach(el => el.value = '');
+      document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+      document.getElementById('custodiaResiduos').checked = true;
+      clearSignature();
+      document.getElementById('vitalsAiCard').classList.add('hidden');
+      document.getElementById('aiClinicalNoticeBox').classList.add('hidden');
+      showToast("Formulario restablecido.");
+    }
+
+    function downloadWordDoc() {
+      const fecha = document.getElementById('pacienteFecha').value || "____/____/202__";
+      const horaIni = document.getElementById('horaInicio').value || "____:____";
+      const horaFin = document.getElementById('horaFin').value || "____:____";
+      const nombre = document.getElementById('pacienteNombre').value || "_________________________________";
+      const doc = document.getElementById('pacienteDoc').value || "______________________";
+      const edad = document.getElementById('pacienteEdad').value || "___";
+      const tel = document.getElementById('pacienteTel').value || "__________________";
+      const dir = document.getElementById('pacienteDireccion').value || "_________________________________";
+      const mun = document.getElementById('pacienteMunicipio').value || "_________________";
+      const acomp = document.getElementById('pacienteAcomp').value || "_________________________________";
+
+      const ta = (document.getElementById('vitalTaSis').value || "___") + "/" + (document.getElementById('vitalTaDia').value || "___");
+      const fc = document.getElementById('vitalFc').value || "___";
+      const fr = document.getElementById('vitalFr').value || "___";
+      const spo2 = document.getElementById('vitalSpo2').value || "___";
+      const temp = document.getElementById('vitalTemp').value || "___";
+      const gluco = document.getElementById('vitalGluco').value || "___";
+
+      const iny = document.getElementById('procIny').checked ? "[X]" : "[ &nbsp; ]";
+      const suero = document.getElementById('procSuero').checked ? "[X]" : "[ &nbsp; ]";
+      const sonda = document.getElementById('procSonda').checked ? "[X]" : "[ &nbsp; ]";
+      const herida = document.getElementById('procHerida').checked ? "[X]" : "[ &nbsp; ]";
+      const otros = document.getElementById('procMuestras').checked ? "[X]" : "[ &nbsp; ]";
+
+      const med = document.getElementById('procMedicamento').value || "___________________________";
+      const dosis = document.getElementById('procDosisVia').value || "___________________________";
+      const lote = document.getElementById('procLote').value || "____________";
+      const vence = document.getElementById('procVencimiento').value || "____/____/202__";
+      const medico = document.getElementById('procMedico').value || "___________________________";
+      const evolucion = document.getElementById('procEvolucion').value || "Sin observaciones adicionales.";
+      const cuidados = document.getElementById('cuidadosDomiciliarios').value || "Recomendaciones generales de enfermería.";
+
+      const docContent = `
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset="utf-8">
+<title>DOMIDOSIS - Registro Clínico de Atención</title>
+<!--[if gte mso 9]>
+<xml>
+ <w:WordDocument>
+  <w:View>Print</w:View>
+  <w:Zoom>100</w:Zoom>
+  <w:DoNotOptimizeForBrowser/>
+ </w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+  @page { size: letter; margin: 1.5cm; }
+  body { font-family: 'Calibri', 'Arial', sans-serif; font-size: 9.5pt; color: #222; line-height: 1.25; }
+  .header-box { border: 2px solid #1a446c; background-color: #f2f6fa; text-align: center; padding: 8px; margin-bottom: 8px; }
+  .title-main { font-size: 14pt; font-weight: bold; color: #1a446c; margin: 0; }
+  .section-title { background-color: #1a446c; color: #ffffff; font-size: 9pt; font-weight: bold; text-transform: uppercase; padding: 3px 6px; margin-top: 6px; margin-bottom: 3px; }
+  table.form-table { width: 100%; border-collapse: collapse; margin-bottom: 3px; }
+  table.form-table td { border: 1px solid #9bb2c9; padding: 4px 6px; font-size: 8.5pt; }
+  .label-cell { background-color: #f7fafc; font-weight: bold; color: #1a446c; }
+  .vitals-box { text-align: center; font-weight: bold; }
+  .sign-line { border-top: 1px solid #222; width: 80%; margin: 40px auto 4px auto; }
+</style>
+</head>
+<body>
+  <div class="header-box">
+    <div class="title-main">DOMIDOSIS</div>
+    <div style="font-size: 11pt; font-weight: bold;">REGISTRO DE ATENCIÓN Y CONSENTIMIENTO INFORMADO</div>
+    <div style="font-size: 9pt; color: #333;">Enfermería Domiciliaria | T.P. 00235-2008 &bull; C.C. 1.098.677.802</div>
+  </div>
+
+  <div class="section-title">1. Datos del Paciente y Ubicación</div>
+  <table class="form-table">
+    <tr>
+      <td class="label-cell" style="width: 15%;">Fecha:</td>
+      <td style="width: 35%;">${fecha}</td>
+      <td class="label-cell" style="width: 15%;">Horario:</td>
+      <td style="width: 35%;">Inicio: ${horaIni} &nbsp;|&nbsp; Fin: ${horaFin}</td>
+    </tr>
+    <tr>
+      <td class="label-cell">Nombre:</td>
+      <td><strong>${nombre}</strong></td>
+      <td class="label-cell">Documento:</td>
+      <td>${doc}</td>
+    </tr>
+    <tr>
+      <td class="label-cell">Edad / Tel:</td>
+      <td>${edad} años &nbsp;|&nbsp; Tel: ${tel}</td>
+      <td class="label-cell">Municipio:</td>
+      <td>${mun}</td>
+    </tr>
+    <tr>
+      <td class="label-cell">Dirección:</td>
+      <td>${dir}</td>
+      <td class="label-cell">Acompañante:</td>
+      <td>${acomp}</td>
+    </tr>
+  </table>
+
+  <div class="section-title">2. Valoración de Signos Vitales</div>
+  <table class="form-table">
+    <tr>
+      <td class="vitals-box">T.A.<br>${ta} mmHg</td>
+      <td class="vitals-box">F.C.<br>${fc} lpm</td>
+      <td class="vitals-box">F.R.<br>${fr} rpm</td>
+      <td class="vitals-box">SpO2<br>${spo2} %</td>
+      <td class="vitals-box">Temp<br>${temp} °C</td>
+      <td class="vitals-box">Glucometría<br>${gluco} mg/dL</td>
+    </tr>
+  </table>
+
+  <div class="section-title">3. Registro del Procedimiento y Evolución</div>
+  <table class="form-table">
+    <tr>
+      <td colspan="2" style="background-color: #f9fbfd;">
+        ${iny} Inyectología &nbsp;&nbsp;&nbsp; 
+        ${suero} Sueroterapia &nbsp;&nbsp;&nbsp; 
+        ${sonda} Paso/Cambio Sonda &nbsp;&nbsp;&nbsp; 
+        ${herida} Curación Herida &nbsp;&nbsp;&nbsp; 
+        ${otros} Toma Muestras/Otros
+      </td>
+    </tr>
+    <tr>
+      <td class="label-cell" style="width: 25%;">Medicamento / Insumo:</td>
+      <td><strong>${med}</strong></td>
+    </tr>
+    <tr>
+      <td class="label-cell">Dosis / Vía:</td>
+      <td>${dosis} &nbsp;|&nbsp; <strong>Lote:</strong> ${lote} &nbsp;|&nbsp; <strong>Vence:</strong> ${vence}</td>
+    </tr>
+    <tr>
+      <td class="label-cell">Médico Prescriptor:</td>
+      <td>${medico}</td>
+    </tr>
+    <tr>
+      <td class="label-cell">Evolución Clínica:</td>
+      <td style="font-size: 8pt; line-height: 1.3;">${evolucion}</td>
+    </tr>
+  </table>
+
+  <div class="section-title">4. Recomendaciones en Casa y Signos de Alarma</div>
+  <div style="font-size: 8pt; padding: 4px; border: 1px solid #9bb2c9; background-color: #ffffff; margin-bottom: 4px;">
+    ${cuidados.replace(/\n/g, '<br>')}
+  </div>
+
+  <div class="section-title">5. Consentimiento Informado y Conformidad</div>
+  <div style="font-size: 7.5pt; text-align: justify; padding: 4px; border: 1px solid #d4dde5; background-color: #fbfbfb;">
+    Declaro que he sido informado(a) de manera clara, oportuna y comprensible sobre el procedimiento de enfermería a realizar, sus objetivos, beneficios esperados y posibles riesgos. Autorizo su ejecución y certifico que el servicio fue prestado a entera satisfacción bajo estrictos estándares de bioseguridad. Se certifica la custodia y retiro de residuos cortopunzantes/biológicos generados.
+  </div>
+
+  <table style="width: 100%; margin-top: 30px; text-align: center; font-size: 8.5pt;">
+    <tr>
+      <td style="width: 50%;">
+        <div class="sign-line"></div>
+        <strong>FIRMA DEL PACIENTE O ACOMPAÑANTE</strong><br>
+        <span>${nombre} &nbsp;|&nbsp; Doc: ${doc}</span>
+      </td>
+      <td style="width: 50%;">
+        <div class="sign-line"></div>
+        <strong>FIRMA TÉCNICO EN ENFERMERÍA</strong><br>
+        <span style="font-weight: bold; color: #1a446c;">Gina Marely Galvis Carvajal</span><br>
+        <span>T.P. 00235-2008 &bull; C.C. 1.098.677.802</span>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+      const blob = new Blob(['\ufeff' + docContent], {
+        type: 'application/msword;charset=utf-8'
+      });
+      const url = URL.createObjectURL(blob);
+      const downloadLink = document.createElement("a");
+      downloadLink.href = url;
+      const cleanName = (document.getElementById('pacienteNombre').value || "Paciente").replace(/[^a-zA-Z0-9]/g, "_");
+      downloadLink.download = `Atencion_Domidosis_${cleanName}.doc`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(url);
+      showToast("Descarga de Word (.doc) iniciada.");
+    }
+  </script>
+</body>
+</html>
